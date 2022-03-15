@@ -56,14 +56,6 @@ int fila_correta (filaint_t *fila)
    aux = fila ;
    do
    {
-      if (aux->next)
-         ; // ponteiro ok
-      else
-      {
-         printf ("ERRO: ponteiros errados ->next\n") ;
-         return 0 ;
-      }
-
       // testa ponteiro next (avaliação em curto-circuito)
       if (aux->next && (aux->next->prev == aux))
          ; // ponteiro ok
