@@ -15,13 +15,16 @@ int queue_size(queue_t *queue) {
 
 void queue_print(char *name, queue_t *queue, void print_elem(void *)) {
     queue_t *first = queue, *it;
-    if (queue == NULL) return;
+    printf("%s: [", name);
 
-    print_elem(first);
-    for (it = queue->next; it != first; it = it->next) {
-        print_elem(it);
+    if (queue != NULL) {
+        print_elem(first);
+        for (it = queue->next; it != first; it = it->next) {
+            printf(" ");
+            print_elem(it);
+        }
     }
-    printf("end print\n");
+    printf("]\n");
 }
 
 int queue_append(queue_t **queue, queue_t *elem) {

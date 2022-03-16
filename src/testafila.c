@@ -15,11 +15,30 @@
 #include <assert.h>
 #include "queue.h"
 
-#include <testafila.h>
+#define N 100
+
+// A estrutura "filaint_t" será usada com as funções de queue.c usando um
+// casting para o tipo "queue_t". Isso funciona bem, se os campos iniciais
+// de ambas as estruturas forem os mesmos. De acordo com a seção 6.7.2.1 do
+// padrão C99: "Within a structure object, the non-bit-ﬁeld members and the
+// units in which bit-ﬁelds reside have addresses that increase in the order
+// in which they are declared.".
+
+typedef struct filaint_t
+{
+   struct filaint_t *prev ;  // ptr para usar cast com queue_t
+   struct filaint_t *next ;  // ptr para usar cast com queue_t
+   int id ;
+   // outros campos podem ser acrescidos aqui
+} filaint_t ;
+
 filaint_t item[N];
 filaint_t *fila0, *fila1, *aux, *final ;
 int ret ;
 
+//------------------------------------------------------------------------------
+
+// imprime na tela um elemento da fila (chamada pela função queue_print)
 void print_elem (void *ptr)
 {
    filaint_t *elem = ptr ;
@@ -27,10 +46,12 @@ void print_elem (void *ptr)
    if (!elem)
       return ;
 
-   elem->prev ? printf ("_%d", elem->prev->id) : printf ("*") ;
+   elem->prev ? printf ("%d", elem->prev->id) : printf ("*") ;
    printf ("<%d>", elem->id) ;
-   elem->next ? printf ("%d_", elem->next->id) : printf ("*") ;
+   elem->next ? printf ("%d", elem->next->id) : printf ("*") ;
 }
+
+//------------------------------------------------------------------------------
 
 // retorna 1 se a estrutura da fila está correta, 0 senão
 int fila_correta (filaint_t *fila)
