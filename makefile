@@ -12,13 +12,14 @@
 
 # Nome do projeto
 NOME_PROJ=pong
-MAIN_FILE=testafila
+MAIN_FILE=contexts
 
 # PATHs
 SOURCE_DIR=./src
 INCLUDE_DIR=./include
 LIB_DIR=
 OBJ_DIR=./objetos
+FILTER_OUT_SRC=./src/testafila.c
 
 
 # Compilador
@@ -29,7 +30,7 @@ INCLUDE_EXTERNO=
 
 # Arquivos fonte
 SOURCE_TYPE=.c
-SOURCES=$(wildcard $(SOURCE_DIR)/*$(SOURCE_TYPE))
+SOURCES=$(filter-out $(FILTER_OUT_SRC), $(wildcard $(SOURCE_DIR)/*$(SOURCE_TYPE)))
 
 # Arquivo headers
 HEADER_TYPE=.h
@@ -44,8 +45,8 @@ FLAGS=
 CC_FLAGS=-c                     \
          -Wall                  \
          -Wextra                \
-         -pedantic-errors       \
          -pedantic              \
+         #-pedantic-errors       \
 
 # Ativa modo debug
 ifeq ($(DEBUG), 1)
