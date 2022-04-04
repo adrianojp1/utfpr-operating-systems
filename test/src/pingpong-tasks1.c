@@ -4,6 +4,7 @@
 
 // Teste da gestão básica de tarefas
 
+//#define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include "ppos.h"
@@ -20,6 +21,9 @@ void BodyPing (void * arg)
    for (i=0; i<4; i++)
    {
       printf ("%s: %d\n", name, i) ;
+#ifdef DEBUG
+      printf("Ping: task id -> %d\n", Ping.id); 
+#endif
       task_switch (&Pong);
    }
    printf ("%s: fim\n", name) ;
@@ -36,6 +40,9 @@ void BodyPong (void * arg)
    for (i=0; i<4; i++)
    {
       printf ("%s: %d\n", name, i) ;
+#ifdef DEBUG
+      printf("Pong: task id -> %d\n", Pong.id); 
+#endif
       task_switch (&Ping);
    }
    printf ("%s: fim\n", name) ;
@@ -44,17 +51,17 @@ void BodyPong (void * arg)
 
 int main (int argc, char *argv[])
 {
-   printf ("main: inicio\n");
+    printf ("main: inicio\n");
+     
+    ppos_init () ;
 
-   ppos_init () ;
+    task_create (&Ping, BodyPing, "    Ping") ;
+    task_create (&Pong, BodyPong, "        Pong") ;
 
-   task_create (&Ping, BodyPing, "    Ping") ;
-   task_create (&Pong, BodyPong, "        Pong") ;
+    task_switch (&Ping) ;
+    task_switch (&Pong) ;
 
-   task_switch (&Ping) ;
-   task_switch (&Pong) ;
+    printf ("main: fim\n");
 
-   printf ("main: fim\n");
-
-   exit (0);
+    exit (0);
 }

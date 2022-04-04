@@ -12,14 +12,15 @@
 
 # Nome do projeto
 NOME_PROJ=pong
-MAIN_FILE=contexts
+MAIN_FILE=pingpong-tasks2
+MAIN_DIR=test/src/
 
 # PATHs
-SOURCE_DIR=./src
-INCLUDE_DIR=./include
+SOURCE_DIR=./main/src/
+INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
-FILTER_OUT_SRC=./src/testafila.c
+#FILTER_OUT_SRC=./src/testafila.c
 
 
 # Compilador
@@ -45,10 +46,11 @@ FLAGS=
 CC_FLAGS=-c                     \
          -Wall                  \
          -Wextra                \
-         -pedantic              \
+         #-pedantic              \
          #-pedantic-errors       \
 
 # Ativa modo debug
+DEBUG=1
 ifeq ($(DEBUG), 1)
 	CC_FLAGS+= -g
 else # Ativa otimizacao
@@ -77,12 +79,12 @@ $(NOME_PROJ): $(OBJ) $(OBJ_DIR)/$(MAIN_FILE).o
 	@ $(CC) $(FLAGS) $^ -o $@
 
 # Compilar todas as sources
-$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%$(SOURCE_TYPE) $(INCLUDE_DIR)/%$(HEADER_TYPE)
+$(OBJ_DIR)/%.o: $(SOURCE_DIR)/%$(SOURCE_TYPE) #$(INCLUDE_DIR)/%$(HEADER_TYPE)
 	@ echo "Compilando: \e[00;31m $< \e[00m"
 	@ $(CC) $< $(CC_FLAGS) -o $@ -I $(INCLUDE_DIR) $(INCLUDE_EXTERNO)
-
+#
 # Compilar a main
-$(OBJ_DIR)/$(MAIN_FILE).o: $(SOURCE_DIR)/$(MAIN_FILE)$(SOURCE_TYPE) $(HEADERS)
+$(OBJ_DIR)/$(MAIN_FILE).o: $(MAIN_DIR)/$(MAIN_FILE)$(SOURCE_TYPE) $(HEADERS)
 	@ echo "Compilando: \e[00;31m $< \e[00m"
 	@ $(CC) $< $(CC_FLAGS) -o $@ -I $(INCLUDE_DIR) $(INCLUDE_EXTERNO)
 
@@ -124,5 +126,8 @@ uninstall:
 run: all
 	@ ./$(NOME_PROJ) 
 
+test: all
+	@ ./$(NOME_PROJ) >> test_result.txt
+	diff test_result.txt test/resources/$(MAIN_FILE).txt -s
 # Evita ambiguidade com arquivo da source
 .PHONY: all clean lib rebuild install uninstall diretorios
