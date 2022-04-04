@@ -4,7 +4,6 @@
 
 // Teste da gestão básica de tarefas
 
-//#define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include "ppos.h"

@@ -7,6 +7,7 @@
 #ifndef __PPOS_DATA__
 #define __PPOS_DATA__
 
+
 #include <ucontext.h>		// biblioteca POSIX de trocas de contexto
 
 // Estrutura que define um Task Control Block (TCB)
@@ -21,6 +22,7 @@ typedef struct task_t
    // ... (outros campos serão adicionados mais tarde)
 } task_t ;
 
+extern task_t* currentTask, mainTask;
 
 
 // estrutura que define um semáforo

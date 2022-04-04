@@ -11,17 +11,22 @@
 #-----------------------------------------------
 
 # Nome do projeto
+ifndef NOME_PROJ
 NOME_PROJ=pong
-MAIN_FILE=pingpong-tasks3
+endif
+ifndef MAIN_FILE
+MAIN_FILE=pingpong-tasks1
+endif
+ifndef MAIN_DIR
 MAIN_DIR=test/src/
+endif
 
 # PATHs
 SOURCE_DIR=./main/src/
 INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
-#FILTER_OUT_SRC=./src/testafila.c
-
+FILTER_OUT_SRC=
 
 # Compilador
 CC=gcc
@@ -46,15 +51,13 @@ FLAGS=
 CC_FLAGS=-c                     \
          -Wall                  \
          -Wextra                \
-         #-pedantic              \
+         -pedantic              \
          #-pedantic-errors       \
 
 # Ativa modo debug
-DEBUG=1
 ifeq ($(DEBUG), 1)
-	CC_FLAGS+= -g
-else # Ativa otimizacao
-	CC_FLAGS+= -O3
+	CC_FLAGS+= -g \
+			   -DDEBUG
 endif
 
 ifeq ($(CC), gcc)
