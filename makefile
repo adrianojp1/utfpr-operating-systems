@@ -12,7 +12,7 @@
 
 # Nome do projeto
 NOME_PROJ=pong
-MAIN_FILE=pingpong-tasks2
+MAIN_FILE=pingpong-tasks3
 MAIN_DIR=test/src/
 
 # PATHs
@@ -70,22 +70,22 @@ RM = rm -f
 
 # Criar os objetos e executavel
 all: diretorios $(NOME_PROJ)
-	@ echo "\e[01mArquivo binario criado: \e[01;04;32m$(NOME_PROJ)\e[00m"
+	@ echo -e "\e[01mArquivo binario criado: \e[01;04;32m$(NOME_PROJ)\e[00m"
 
 # linkar os objetos e gerar o executavel
 $(NOME_PROJ): $(OBJ) $(OBJ_DIR)/$(MAIN_FILE).o
-	@ echo " "
-	@ echo "\e[01mCriando arquivo binario:\e[01;32m $@ \e[00m"
+	@ echo -e " "
+	@ echo -e "\e[01mCriando arquivo binario:\e[01;32m $@ \e[00m"
 	@ $(CC) $(FLAGS) $^ -o $@
 
 # Compilar todas as sources
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%$(SOURCE_TYPE) #$(INCLUDE_DIR)/%$(HEADER_TYPE)
-	@ echo "Compilando: \e[00;31m $< \e[00m"
+	@ echo -e "Compilando: \e[00;31m $< \e[00m"
 	@ $(CC) $< $(CC_FLAGS) -o $@ -I $(INCLUDE_DIR) $(INCLUDE_EXTERNO)
 #
 # Compilar a main
 $(OBJ_DIR)/$(MAIN_FILE).o: $(MAIN_DIR)/$(MAIN_FILE)$(SOURCE_TYPE) $(HEADERS)
-	@ echo "Compilando: \e[00;31m $< \e[00m"
+	@ echo -e "Compilando: \e[00;31m $< \e[00m"
 	@ $(CC) $< $(CC_FLAGS) -o $@ -I $(INCLUDE_DIR) $(INCLUDE_EXTERNO)
 
 # Criar os diretorios para objetos
@@ -99,9 +99,9 @@ clean:
 
 # Criar uma biblioteca estatica
 lib: diretorios $(OBJ)
-	@ echo "\e[01mCriando biblioteca estática:\e[01;32m $(NOME_PROJ) \e[00m"
+	@ echo -e "\e[01mCriando biblioteca estática:\e[01;32m $(NOME_PROJ) \e[00m"
 	@ ar -rcs $(LIB_DIR)/lib$(NOME_PROJ).a $(OBJ)
-	@ echo "\e[01mBiblioteca estática criada: \e[01;04;32m$(NOME_PROJ)\e[00m"
+	@ echo -e "\e[01mBiblioteca estática criada: \e[01;04;32m$(NOME_PROJ)\e[00m"
 
 # Recompilar o programa
 rebuild: clean all
@@ -112,7 +112,7 @@ install: lib
 	@ sudo mkdir -p /usr/local/include/$(NOME_PROJ)
 	@ sudo cp -p -r $(INCLUDE_DIR)/* /usr/local/include/$(NOME_PROJ)/
 	@ sudo ldconfig
-	@ echo "\e[01m\e[01;04;32m$(NOME_PROJ)\e[01;0m instalada.\e[00m"
+	@ echo -e "\e[01m\e[01;04;32m$(NOME_PROJ)\e[01;0m instalada.\e[00m"
 
 # Desinstalacao (apenas para bibliotecas estaticas)
 uninstall:
@@ -120,14 +120,15 @@ uninstall:
 	@ sudo rm /usr/local/include/$(NOME_PROJ)/*
 	@ sudo rmdir --ignore-fail-on-non-empty /usr/local/include/$(NOME_PROJ)
 	@ sudo ldconfig
-	@ echo "\e[01m\e[01;04;32m$(NOME_PROJ)\e[01;0m removida.\e[00m"
+	@ echo -e "\e[01m\e[01;04;32m$(NOME_PROJ)\e[01;0m removida.\e[00m"
 
 # Gerar o executavel e executar
 run: all
 	@ ./$(NOME_PROJ) 
 
 test: all
-	@ ./$(NOME_PROJ) >> test_result.txt
-	diff test_result.txt test/resources/$(MAIN_FILE).txt -s
+	@ ./$(NOME_PROJ) > test_result.txt
+	@ diff test_result.txt test/resources/$(MAIN_FILE).txt -s
+	
 # Evita ambiguidade com arquivo da source
 .PHONY: all clean lib rebuild install uninstall diretorios
