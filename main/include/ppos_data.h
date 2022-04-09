@@ -19,7 +19,8 @@ typedef struct task_t
   short status ;			// pronta, rodando, suspensa, ...
   short preemptable ;			// pode ser preemptada?
   char* stack;
-   // ... (outros campos serão adicionados mais tarde)
+  int prio; // prioridade [-20, 20]
+  int priod; // prioridade dinamica [-20, 20]
 } task_t ;
 
 extern task_t* currentTask, mainTask;

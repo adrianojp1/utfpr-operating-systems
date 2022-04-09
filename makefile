@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=pingpong-dispatcher
+MAIN_FILE=pingpong-scheduler
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src/
