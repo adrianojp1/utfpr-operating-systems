@@ -1,8 +1,8 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ucontext.h>
-#include <signal.h>
 #include <sys/time.h>
+#include <ucontext.h>
 
 // Internal libs
 #include <ppos.h>
@@ -29,6 +29,7 @@ task_t *readyTasksQueue;
 int currentId = 1;
 int userTasks = 0;
 int ticks = 0;
+int _sysTime = 0;
 
 struct sigaction action;
 struct itimerval timer;
@@ -39,11 +40,14 @@ void print_elem(task_t *task) {
 }
 #endif
 
+unsigned int systime() { return _sysTime; }
+
 // tratador do sinal
 void ticks_handler(int signum) {
 #ifdef DEBUG
     printf("Recebi o sinal %d\n", signum);
 #endif
+    _sysTime++;
     ticks--;
     if (!ticks && currentTask->preemptable) {
         task_yield();
@@ -105,6 +109,10 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
         task->id = currentId++;
         task->status = READY;
         task->preemptable = 1;
+        task->init_time = systime();
+        task->activations = 0;
+        task->activation_time = 0;
+        task->processor_time = 0;
     } else {
         perror("Erro na criação da pilha: ");
         return -1;
@@ -126,6 +134,10 @@ void task_exit(int exit_code) {
     printf("PPOS: task %d exited with code %d\n", task_id(), exit_code);
 #endif
     currentTask->status = TERMINATED;
+    printf("Task %d exit: execution time %d ms, processor time  %d ms, %d "
+           "activations\n",
+           task_id(), systime() - currentTask->init_time,
+           currentTask->processor_time, currentTask->activations);
     if (currentTask->id == dispatcherTask.id) {
         task_switch(&mainTask);
     } else {
@@ -139,11 +151,10 @@ int task_switch(task_t *task) {
         printf("Ignoring task switch because it's the same: %d -> %d\n",
                currentTask->id, task->id);
 #endif
-        return 0;
+        return -1;
     }
 #ifdef DEBUG
     printf("Switch task %d -> %d\n", currentTask->id, task->id);
-    printf("Current Task antes -> %d \n", currentTask->id);
 #endif
     ucontext_t *currentContext = &(currentTask->context);
     // return current task to ready task queue if not mainTask
@@ -151,17 +162,17 @@ int task_switch(task_t *task) {
         append_to_ready_tasks_queue(currentTask);
     }
 
-    currentTask = task;
-    currentTask->status = RUNNING;
-    if (currentTask->id != mainTask.id) {
-        remove_from_ready_tasks_queue(currentTask);
+    task->status = RUNNING;
+    if (task->id != mainTask.id) {
+        remove_from_ready_tasks_queue(task);
     }
-#ifdef DEBUG
-    printf("Current Task depois -> %d \n", currentTask->id);
-#endif
     ticks = QUANTUM;
+    task->activation_time = systime();
+    task->activations++;
+    currentTask->processor_time += systime() - currentTask->activation_time;
+    currentTask = task;
     swapcontext(currentContext, &(task->context));
-    return 0;
+    return -1;
 }
 
 int task_id() { return currentTask->id; }

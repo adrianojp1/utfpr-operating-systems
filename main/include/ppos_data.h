@@ -21,6 +21,10 @@ typedef struct task_t
   char* stack;
   int prio; // prioridade [-20, 20]
   int priod; // prioridade dinamica [-20, 20]
+  int init_time;
+  int activation_time;
+  int activations;
+  int processor_time;
 } task_t ;
 
 extern task_t* currentTask, mainTask;
