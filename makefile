@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=pingpong-scheduler
+MAIN_FILE=pingpong-preempcao-stress
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src/
@@ -50,8 +50,9 @@ FLAGS=
 # Flags para o compilador
 CC_FLAGS=-c                     \
          -Wall                  \
-         -Wextra                \
-         -pedantic              \
+		-D_POSIX_C_SOURCE       \
+		 # -Wextra                \
+         # -pedantic              \
          #-pedantic-errors       \
 
 # Ativa modo debug

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
+#include <signal.h>
+#include <sys/time.h>
 
 // Internal libs
 #include <ppos.h>
@@ -19,18 +21,59 @@
 #define MAX_TASK_PRIO 20
 #define MIN_TASK_PRIO -20
 #define TASK_AGING -1
+#define QUANTUM 20
+
 
 // Globals
 task_t *currentTask, dispatcherTask, mainTask;
 task_t *readyTasksQueue;
 int currentId = 1;
 int userTasks = 0;
+int ticks = 0;
+
+struct sigaction action;
+struct itimerval timer;
 
 #ifdef DEBUG
 void print_elem(task_t *task) {
     printf("%d(%d, %d)", task->id, task->prio, task->priod);
 }
 #endif
+
+// tratador do sinal
+void ticks_handler(int signum) {
+#ifdef DEBUG
+    printf("Recebi o sinal %d\n", signum);
+#endif
+    ticks -= 1;
+    if (!ticks && currentTask->preemptable) {
+        task_yield();
+    }
+}
+
+void init_handler() {
+    // registra a ação para o sinal de timer SIGALRM
+    struct sigaction action;
+    action.sa_handler = ticks_handler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    if (sigaction(SIGALRM, &action, 0) < 0) {
+        perror("Erro em sigaction: ");
+        exit(1);
+    }
+
+    // ajusta valores do temporizador inicia apos 1ms com intervalo de 1ms
+    timer.it_value.tv_usec = 1000;
+    timer.it_value.tv_sec = 0;
+    timer.it_interval.tv_usec = 1000;
+    timer.it_interval.tv_sec = 0;
+
+    // arma o temporizador ITIMER_REAL (vide man setitimer)
+    if (setitimer(ITIMER_REAL, &timer, 0) < 0) {
+        perror("Erro em setitimer: ");
+        exit(1);
+    }
+}
 
 void append_to_ready_tasks_queue(task_t *task) {
 #ifdef DEBUG
@@ -62,6 +105,7 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
         task->context.uc_link = 0;
         task->id = currentId++;
         task->status = READY;
+        task->preemptable = 1;
     } else {
         perror("Erro na criação da pilha: ");
         return -1;
@@ -79,9 +123,8 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
 }
 
 void task_exit(int exit_code) {
-    int id = task_id();
 #ifdef DEBUG
-    printf("PPOS: task %d exited with code %d\n", id, exit_code);
+    printf("PPOS: task %d exited with code %d\n", task_id(), exit_code);
 #endif
     currentTask->status = TERMINATED;
     if (currentTask->id == dispatcherTask.id) {
@@ -117,6 +160,7 @@ int task_switch(task_t *task) {
 #ifdef DEBUG
     printf("Current Task depois -> %d \n", currentTask->id);
 #endif
+    ticks = QUANTUM;
     swapcontext(currentContext, &(task->context));
     return 0;
 }
@@ -236,11 +280,13 @@ void dispatcher() {
 void ppos_init() {
     // desativa o buffer da saida padrao (stdout), usado pela função printf
     setvbuf(stdout, 0, _IONBF, 0);
+    mainTask.preemptable = 0;
+    dispatcherTask.preemptable = 0;
     mainTask.id = 0;         // inicializa o id da main em 0
     currentTask = &mainTask; // inicia com o contexto principal
 
     task_create(&dispatcherTask, dispatcher, NULL);
-
+    init_handler();
 #ifdef DEBUG
     printf("\nPPOS: system initialized\n\n");
 #endif
