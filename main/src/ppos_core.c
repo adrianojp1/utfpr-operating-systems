@@ -1,6 +1,3 @@
-// Thread stack size
-#define STACKSIZE 64 * 1024
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
@@ -9,12 +6,18 @@
 #include <ppos.h>
 #include <queue.h>
 
-// Taks status
+// Thread stack size
+#define STACKSIZE 64 * 1024
+
+// Task status
 #define READY 0
 #define RUNNING 1
 #define SUSPENDED 2
 #define TERMINATED 3
 
+// Task priority
+#define MAX_TASK_PRIO 20
+#define MIN_TASK_PRIO -20
 #define TASK_AGING -1
 
 // Globals
@@ -131,35 +134,54 @@ void task_yield() {
     task_switch(&dispatcherTask);
 }
 
+void task_setprio(task_t *task, int prio) {
+    if (task == NULL)
+        task = currentTask;
+
+    if (prio > MAX_TASK_PRIO)
+        prio = MAX_TASK_PRIO;
+
+    if (prio < MIN_TASK_PRIO)
+        prio = MIN_TASK_PRIO;
+
+    task->prio = prio;
+    task->priod = prio;
+}
+
+int task_getprio(task_t *task) {
+    return task == NULL ? currentTask->prio : task->prio;
+}
+
+void age_task(task_t *task) {
+    if (task->priod != MIN_TASK_PRIO)
+        task->priod += TASK_AGING;
+}
+
 task_t *scheduler() {
 #ifdef DEBUG
     queue_print("Scheduler", readyTasksQueue, print_elem);
     printf("readyTasksQueue: %p\n", (void *)readyTasksQueue);
 #endif
+
     if (readyTasksQueue == NULL)
         return NULL;
     task_t *first = readyTasksQueue, *it;
     task_t *nextTask = readyTasksQueue;
     int minPrio = nextTask->priod;
 
+    // find the task with lowest priod and age all tasks
     for (it = readyTasksQueue->next; it != first; it = it->next) {
         if (it->priod <= minPrio) {
             nextTask = it;
             minPrio = it->priod;
         }
+        age_task(it);
     }
+    age_task(first);
+    nextTask->priod = nextTask->prio;
 
 #ifdef DEBUG
     printf("minPrio: %d\n", nextTask->priod);
-#endif
-
-    first->priod += TASK_AGING;
-    for (it = readyTasksQueue->next; it != first; it = it->next) {
-        if (it->priod != -20)
-            it->priod += TASK_AGING;
-    }
-    nextTask->priod = nextTask->prio;
-#ifdef DEBUG
     printf("Scheduler next task: %d\n", nextTask->id);
 #endif
     return nextTask;
@@ -209,15 +231,6 @@ void dispatcher() {
 #endif
     }
     task_exit(0);
-}
-
-void task_setprio(task_t *task, int prio) {
-    task->prio = prio;
-    task->priod = prio;
-}
-
-int task_getprio(task_t *task) {
-    return task == NULL ? currentTask->prio : task->prio;
 }
 
 void ppos_init() {
