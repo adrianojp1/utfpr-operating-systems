@@ -156,20 +156,24 @@ int task_switch(task_t *task) {
 #ifdef DEBUG
     printf("Switch task %d -> %d\n", currentTask->id, task->id);
 #endif
+    
+    // prepare current task to be suspended
     ucontext_t *currentContext = &(currentTask->context);
-    // return current task to ready task queue if not mainTask
     if (currentTask->id != mainTask.id && currentTask->status != TERMINATED) {
         append_to_ready_tasks_queue(currentTask);
     }
+    currentTask->processor_time += systime() - currentTask->activation_time;
 
+    // prepare next task to be running
     task->status = RUNNING;
     if (task->id != mainTask.id) {
         remove_from_ready_tasks_queue(task);
     }
-    ticks = QUANTUM;
     task->activation_time = systime();
     task->activations++;
-    currentTask->processor_time += systime() - currentTask->activation_time;
+    
+    // reset ticks for next task
+    ticks = QUANTUM;
     currentTask = task;
     swapcontext(currentContext, &(task->context));
     return -1;
