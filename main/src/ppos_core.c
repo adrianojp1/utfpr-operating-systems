@@ -23,7 +23,6 @@
 #define TASK_AGING -1
 #define QUANTUM 20
 
-
 // Globals
 task_t *currentTask, dispatcherTask, mainTask;
 task_t *readyTasksQueue;
@@ -45,7 +44,7 @@ void ticks_handler(int signum) {
 #ifdef DEBUG
     printf("Recebi o sinal %d\n", signum);
 #endif
-    ticks -= 1;
+    ticks--;
     if (!ticks && currentTask->preemptable) {
         task_yield();
     }
