@@ -139,7 +139,8 @@ void task_exit(int exit_code) {
            task_id(), systime() - currentTask->init_time,
            currentTask->processor_time, currentTask->activations);
     if (currentTask->id == dispatcherTask.id) {
-        task_switch(&mainTask);
+        free(dispatcherTask.stack);
+        exit(0);
     } else {
         task_switch(&dispatcherTask);
     }
@@ -156,22 +157,21 @@ int task_switch(task_t *task) {
 #ifdef DEBUG
     printf("Switch task %d -> %d\n", currentTask->id, task->id);
 #endif
-    
+
     // prepare current task to be suspended
     ucontext_t *currentContext = &(currentTask->context);
-    if (currentTask->id != mainTask.id && currentTask->status != TERMINATED) {
+    if (currentTask->status != TERMINATED) {
         append_to_ready_tasks_queue(currentTask);
     }
     currentTask->processor_time += systime() - currentTask->activation_time;
 
     // prepare next task to be running
     task->status = RUNNING;
-    if (task->id != mainTask.id) {
-        remove_from_ready_tasks_queue(task);
-    }
+    remove_from_ready_tasks_queue(task);
+
     task->activation_time = systime();
     task->activations++;
-    
+
     // reset ticks for next task
     ticks = QUANTUM;
     currentTask = task;
