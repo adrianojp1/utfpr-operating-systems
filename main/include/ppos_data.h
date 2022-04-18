@@ -23,6 +23,8 @@ typedef struct task_t {
     int activation_time;
     int activations;
     int processor_time;
+    struct task_t *waiting;
+    int join_exit_code;
 } task_t;
 
 extern task_t *currentTask, mainTask;

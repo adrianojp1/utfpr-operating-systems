@@ -113,6 +113,7 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
         task->activations = 0;
         task->activation_time = 0;
         task->processor_time = 0;
+        task->waiting = NULL;
     } else {
         perror("Erro na criação da pilha: ");
         return -1;
@@ -138,6 +139,12 @@ void task_exit(int exit_code) {
            "activations\n",
            task_id(), systime() - currentTask->init_time,
            currentTask->processor_time, currentTask->activations);
+
+    while (currentTask->waiting != NULL) {
+        currentTask->waiting->join_exit_code = exit_code;
+        task_resume((task_t *)currentTask->waiting,
+                    (task_t **)&(currentTask->waiting));
+    }
     if (currentTask->id == dispatcherTask.id) {
         free(dispatcherTask.stack);
         exit(0);
@@ -160,7 +167,7 @@ int task_switch(task_t *task) {
 
     // prepare current task to be suspended
     ucontext_t *currentContext = &(currentTask->context);
-    if (currentTask->status != TERMINATED) {
+    if (currentTask->status == READY) {
         append_to_ready_tasks_queue(currentTask);
     }
     currentTask->processor_time += systime() - currentTask->activation_time;
@@ -188,7 +195,7 @@ void task_yield() {
     printf("Suspending task -> %d \n", currentTask->id);
 #endif
     // return the processor to dispatcher
-    currentTask->status = SUSPENDED;
+    currentTask->status = READY;
     task_switch(&dispatcherTask);
 }
 
@@ -279,7 +286,7 @@ void dispatcher() {
         // scheduler choose a task?
         if (nextTask != NULL) {
             // switch the context to the next task
-            currentTask->status = SUSPENDED;
+            currentTask->status = READY;
             task_switch(nextTask);
             // returning to dispatcher, handle the task acording to it state
             handle_task_return_to_dispatcher(nextTask);
@@ -308,6 +315,7 @@ int main_init() {
         mainTask.activations = 0;
         mainTask.activation_time = 0;
         mainTask.processor_time = 0;
+        mainTask.waiting = NULL;
     } else {
         perror("Erro na criação da pilha: ");
         return -1;
@@ -317,6 +325,29 @@ int main_init() {
 #ifdef DEBUG
     printf("Criou task %d\n", mainTask.id);
 #endif
+    return 0;
+}
+
+int task_join(task_t *task) {
+    if (task == NULL || task->status == TERMINATED) {
+        return -1;
+    }
+    task_suspend(&(task->waiting));
+    task_switch(&dispatcherTask);
+    return currentTask->join_exit_code;
+}
+
+void task_suspend(task_t **queue) {
+    // a tarefa nao esta na fila pois esta execurando
+    // remove_from_ready_tasks_queue(currentTask);
+    currentTask->status = SUSPENDED;
+    queue_append((queue_t **)queue, (queue_t *)currentTask);
+}
+
+int task_resume(task_t *task, task_t **queue) {
+    queue_remove((queue_t **)queue, (queue_t *)task);
+    task->status = READY;
+    append_to_ready_tasks_queue(task);
     return 0;
 }
 
