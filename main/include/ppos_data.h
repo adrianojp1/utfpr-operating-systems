@@ -7,52 +7,44 @@
 #ifndef __PPOS_DATA__
 #define __PPOS_DATA__
 
-
-#include <ucontext.h>		// biblioteca POSIX de trocas de contexto
+#include <ucontext.h> // biblioteca POSIX de trocas de contexto
 
 // Estrutura que define um Task Control Block (TCB)
-typedef struct task_t
-{
-  struct task_t *prev, *next ;		// ponteiros para usar em filas
-  int id ;				// identificador da tarefa
-  ucontext_t context ;			// contexto armazenado da tarefa
-  short status ;			// pronta, rodando, suspensa, ...
-  short preemptable ;			// pode ser preemptada?
-  char* stack;
-  int prio; // prioridade [-20, 20]
-  int priod; // prioridade dinamica [-20, 20]
-  int init_time;
-  int activation_time;
-  int activations;
-  int processor_time;
-} task_t ;
+typedef struct task_t {
+    struct task_t *prev, *next; // ponteiros para usar em filas
+    int id;                     // identificador da tarefa
+    ucontext_t context;         // contexto armazenado da tarefa
+    short status;               // pronta, rodando, suspensa, ...
+    short preemptable;          // pode ser preemptada?
+    char *stack;
+    int prio;  // prioridade [-20, 20]
+    int priod; // prioridade dinamica [-20, 20]
+    int init_time;
+    int activation_time;
+    int activations;
+    int processor_time;
+} task_t;
 
-extern task_t* currentTask, mainTask;
-
+extern task_t *currentTask, mainTask;
 
 // estrutura que define um semáforo
-typedef struct
-{
-  // preencher quando necessário
-} semaphore_t ;
+typedef struct {
+    // preencher quando necessário
+} semaphore_t;
 
 // estrutura que define um mutex
-typedef struct
-{
-  // preencher quando necessário
-} mutex_t ;
+typedef struct {
+    // preencher quando necessário
+} mutex_t;
 
 // estrutura que define uma barreira
-typedef struct
-{
-  // preencher quando necessário
-} barrier_t ;
+typedef struct {
+    // preencher quando necessário
+} barrier_t;
 
 // estrutura que define uma fila de mensagens
-typedef struct
-{
-  // preencher quando necessário
-} mqueue_t ;
+typedef struct {
+    // preencher quando necessário
+} mqueue_t;
 
 #endif
-
