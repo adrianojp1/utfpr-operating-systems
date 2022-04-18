@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     task_create(&Pong, Body, "                Pong");
     task_create(&Pung, Body, "                    Pung");
 
-    hardwork(0.95 * WORKLOAD);
+    hardwork(0.75 * WORKLOAD);
 
     printf("main: fim    em %4d ms\n", systime());
     task_exit(0);

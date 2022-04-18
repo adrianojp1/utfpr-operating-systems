@@ -26,7 +26,7 @@
 // Globals
 task_t *currentTask, dispatcherTask, mainTask;
 task_t *readyTasksQueue;
-int currentId = 1;
+int currentId = 0;
 int userTasks = 0;
 int ticks = 0;
 int _sysTime = 0;
@@ -291,17 +291,45 @@ void dispatcher() {
     task_exit(0);
 }
 
+int main_init() {
+    getcontext(&(mainTask.context));
+    mainTask.stack = malloc(STACKSIZE);
+
+    // Atualiza os parametros do contexto com a stack alocada
+    if (mainTask.stack) {
+        mainTask.context.uc_stack.ss_sp = mainTask.stack;
+        mainTask.context.uc_stack.ss_size = STACKSIZE;
+        mainTask.context.uc_stack.ss_flags = 0;
+        mainTask.context.uc_link = 0;
+        mainTask.id = currentId++;
+        mainTask.status = READY;
+        mainTask.preemptable = 1;
+        mainTask.init_time = systime();
+        mainTask.activations = 0;
+        mainTask.activation_time = 0;
+        mainTask.processor_time = 0;
+    } else {
+        perror("Erro na criação da pilha: ");
+        return -1;
+    }
+    userTasks++;
+    task_setprio(&mainTask, 0);
+#ifdef DEBUG
+    printf("Criou task %d\n", mainTask.id);
+#endif
+    return 0;
+}
+
 void ppos_init() {
     // desativa o buffer da saida padrao (stdout), usado pela função printf
     setvbuf(stdout, 0, _IONBF, 0);
-    mainTask.preemptable = 0;
-    dispatcherTask.preemptable = 0;
-    mainTask.id = 0;         // inicializa o id da main em 0
+    main_init();
     currentTask = &mainTask; // inicia com o contexto principal
-
     task_create(&dispatcherTask, dispatcher, NULL);
+    dispatcherTask.preemptable = 0;
     init_handler();
 #ifdef DEBUG
     printf("\nPPOS: system initialized\n\n");
 #endif
+    task_yield();
 }
