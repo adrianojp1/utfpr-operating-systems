@@ -23,16 +23,17 @@ endif
 
 # PATHs
 SOURCE_DIR=./main/src/
-INCLUDE_DIR=./main/include/
+INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
 FILTER_OUT_SRC=
+FILTER_OUT_INCLUDE=./main/include/ppos.h
 
 # Compilador
 CC=gcc
 
 # headers de bibliotecas externas
-INCLUDE_EXTERNO=-lpthread
+INCLUDE_EXTERNO=
 
 # Arquivos fonte
 SOURCE_TYPE=.c
@@ -40,7 +41,7 @@ SOURCES=$(filter-out $(FILTER_OUT_SRC), $(wildcard $(SOURCE_DIR)/*$(SOURCE_TYPE)
 
 # Arquivo headers
 HEADER_TYPE=.h
-HEADERS=$(wildcard $(INCLUDE_DIR)/*$(HEADER_TYPE))
+HEADERS=$(filter-out $(FILTER_OUT_INCLUDE), $(wildcard $(INCLUDE_DIR)/*$(HEADER_TYPE)))
 
 # Objetos que serão gerados
 OBJ=$(subst $(SOURCE_TYPE),.o,$(subst $(SOURCE_DIR),$(OBJ_DIR), $(subst $(SOURCE_DIR)/$(MAIN_FILE)$(SOURCE_TYPE),,$(SOURCES))))
