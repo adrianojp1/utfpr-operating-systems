@@ -28,9 +28,7 @@ typedef struct thread_args {
 } thread_args;
 
 queue_val_t *get_random_elem() {
-    queue_val_t *elem;
-    elem = malloc(sizeof elem);
-
+    queue_val_t *elem = malloc(sizeof elem);
     elem->val = rand() % 100;;
     elem->prev = NULL;
     elem->next = NULL;
@@ -99,7 +97,7 @@ void execute_no_sync() {
 
     // create threads
     for (i = 0; i < NUM_THREADS; i++) {
-        
+
         thread_args args;
         args.id = i;
         args.queue = queue;

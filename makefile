@@ -27,7 +27,7 @@ INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
 FILTER_OUT_SRC=
-FILTER_OUT_INCLUDE=./main/include/ppos.h
+FILTER_OUT_INCLUDE=
 
 # Compilador
 CC=gcc
@@ -46,12 +46,12 @@ HEADERS=$(filter-out $(FILTER_OUT_INCLUDE), $(wildcard $(INCLUDE_DIR)/*$(HEADER_
 # Objetos que serão gerados
 OBJ=$(subst $(SOURCE_TYPE),.o,$(subst $(SOURCE_DIR),$(OBJ_DIR), $(subst $(SOURCE_DIR)/$(MAIN_FILE)$(SOURCE_TYPE),,$(SOURCES))))
 
-FLAGS=
+FLAGS=-lpthread
 
 # Flags para o compilador
 CC_FLAGS=-c                     \
          -Wall                  \
-		-D_POSIX_C_SOURCE       \
+		 -D_POSIX_C_SOURCE      \
 		 # -Wextra                \
          # -pedantic              \
          #-pedantic-errors       \
@@ -81,13 +81,13 @@ all: diretorios $(NOME_PROJ)
 $(NOME_PROJ): $(OBJ) $(OBJ_DIR)/$(MAIN_FILE).o
 	@ echo -e " "
 	@ echo -e "\e[01mCriando arquivo binario:\e[01;32m $@ \e[00m"
-	@ $(CC) $(FLAGS) $^ -o $@
+	@ $(CC) $^ -o $@ $(FLAGS)
 
 # Compilar todas as sources
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%$(SOURCE_TYPE) #$(INCLUDE_DIR)/%$(HEADER_TYPE)
 	@ echo -e "Compilando: \e[00;31m $< \e[00m"
 	@ $(CC) $< $(CC_FLAGS) -o $@ -I $(INCLUDE_DIR) $(INCLUDE_EXTERNO)
-#
+
 # Compilar a main
 $(OBJ_DIR)/$(MAIN_FILE).o: $(MAIN_DIR)/$(MAIN_FILE)$(SOURCE_TYPE) $(HEADERS)
 	@ echo -e "Compilando: \e[00;31m $< \e[00m"
