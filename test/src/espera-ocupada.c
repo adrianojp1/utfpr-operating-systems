@@ -8,9 +8,10 @@
  **********************************************
  */
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
+#include <string.h>
 #include <time.h>
 
 // Internal libs
@@ -29,23 +30,12 @@ typedef struct thread_args {
     queue_val_t *queue;
 } thread_args;
 
-queue_val_t *get_random_elem() {
-    queue_val_t *elem = malloc(sizeof(elem));
+queue_val_t *create_random_elem() {
+    queue_val_t *elem = malloc(sizeof(queue_val_t));
     elem->val = rand() % 100;
     elem->prev = NULL;
     elem->next = NULL;
     return elem;
-}
-
-void print_elem(void *p_elem) {
-    queue_val_t *elem = p_elem;
-    if (!elem)
-        return;
-
-    if (elem->val < 10) {
-        fprintf(stderr, " ");
-    }
-    fprintf(stderr, "%d", elem->val);
 }
 
 void *threadBody(void *t_args) {
@@ -59,14 +49,22 @@ void *threadBody(void *t_args) {
         queue_val_t *old = queue;
         queue_remove((queue_t **)&queue, (queue_t *)queue);
 
-        queue_val_t *new = get_random_elem();
+        queue_val_t *new = create_random_elem();
         queue_append((queue_t **)&queue, (queue_t *)new);
 
-        // thread 0: tira 34,  põe 81,  fila: 47  2 19 66 32 60  9 11 38 81
-        fprintf(stderr, "thread %d: tira %d,  põe: %d,  fila: ", thread_id, old->val,
-               new->val);
-        queue_print("", (queue_t *)queue, print_elem);
-        fprintf(stderr, "\n");
+        char out[100];
+        sprintf(out, "thread %d: tira %2d,  põe: %2d,  fila: %2d", thread_id,
+                old->val, new->val, queue->val);
+
+        queue_val_t *it;
+        for (it = queue->next; it != queue; it = it->next) {
+            char val[5];
+            sprintf(val, " %2d", it->val);
+            strcat(out, val);
+        }
+
+        strcat(out, "\n");
+        fprintf(stderr, "%s", out);
 
         free(old);
     }
@@ -77,7 +75,7 @@ void *threadBody(void *t_args) {
 queue_val_t *create_random_queue() {
     queue_val_t *queue = NULL;
     for (int i = 0; i < 10; i++) {
-        queue_append((queue_t **)&queue, (queue_t *)get_random_elem());
+        queue_append((queue_t **)&queue, (queue_t *)create_random_elem());
     }
     return queue;
 }
@@ -95,11 +93,10 @@ void execute_no_sync() {
     // create threads
     for (i = 0; i < NUM_THREADS; i++) {
 
-        thread_args *args = malloc(sizeof(args));
+        thread_args *args = malloc(sizeof(thread_args));
         args->id = i;
         args->queue = queue;
 
-        fprintf(stderr, "criando thread %d\n", i);
         status = pthread_create(&thread[i], &attr, threadBody, (void *)args);
         if (status) {
             fprintf(stderr, "pthread_create on thread %d", i);
