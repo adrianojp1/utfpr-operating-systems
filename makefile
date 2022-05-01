@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=pingpong-maintask
+MAIN_FILE=espera-ocupada
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src/
@@ -23,7 +23,7 @@ endif
 
 # PATHs
 SOURCE_DIR=./main/src/
-INCLUDE_DIR=./main/include
+INCLUDE_DIR=./main/include/
 LIB_DIR=
 OBJ_DIR=./objetos
 FILTER_OUT_SRC=
@@ -32,7 +32,7 @@ FILTER_OUT_SRC=
 CC=gcc
 
 # headers de bibliotecas externas
-INCLUDE_EXTERNO=
+INCLUDE_EXTERNO=-lpthread
 
 # Arquivos fonte
 SOURCE_TYPE=.c

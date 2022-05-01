@@ -1,3 +1,13 @@
+/**
+ **********************************************
+ *         PPOS Core implementation          **
+ *                                           **
+ * Autores: Ricky Lemes Habegger &           **
+ *          Adriano José Paulichi            **
+ *                                           **
+ **********************************************
+ */
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
