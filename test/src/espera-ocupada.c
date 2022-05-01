@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <queue.h>
 #include <time.h>
+
+// Internal libs
+#include <queue.h>
 
 #define NUM_THREADS 2
 
@@ -28,8 +30,8 @@ typedef struct thread_args {
 } thread_args;
 
 queue_val_t *get_random_elem() {
-    queue_val_t *elem = malloc(sizeof elem);
-    elem->val = rand() % 100;;
+    queue_val_t *elem = malloc(sizeof(elem));
+    elem->val = rand() % 100;
     elem->prev = NULL;
     elem->next = NULL;
     return elem;
@@ -41,15 +43,17 @@ void print_elem(void *p_elem) {
         return;
 
     if (elem->val < 10) {
-        printf(" ");
+        fprintf(stderr, " ");
     }
-    printf("%d", elem->val);
+    fprintf(stderr, "%d", elem->val);
 }
 
 void *threadBody(void *t_args) {
+
     thread_args *args = t_args;
     int thread_id = args->id;
     queue_val_t *queue = args->queue;
+    fprintf(stderr, "thread %d iniciada\n", thread_id);
 
     while (1) {
         queue_val_t *old = queue;
@@ -59,9 +63,10 @@ void *threadBody(void *t_args) {
         queue_append((queue_t **)&queue, (queue_t *)new);
 
         // thread 0: tira 34,  põe 81,  fila: 47  2 19 66 32 60  9 11 38 81
-        printf("thread %d: tira %d,  põe: %d,  fila: \n", thread_id, old->val,
+        fprintf(stderr, "thread %d: tira %d,  põe: %d,  fila: ", thread_id, old->val,
                new->val);
         queue_print("", (queue_t *)queue, print_elem);
+        fprintf(stderr, "\n");
 
         free(old);
     }
@@ -69,20 +74,12 @@ void *threadBody(void *t_args) {
     pthread_exit(NULL);
 }
 
-queue_val_t *create_random_queue(int size) {
-    queue_val_t *queue;
-    for (int i = 0; i < size; i++) {
+queue_val_t *create_random_queue() {
+    queue_val_t *queue = NULL;
+    for (int i = 0; i < 10; i++) {
         queue_append((queue_t **)&queue, (queue_t *)get_random_elem());
     }
     return queue;
-}
-
-void destroy_queue(queue_val_t *queue) {
-    while (queue) {
-        queue_val_t *removed = queue;
-        queue_remove((queue_t **)&queue, (queue_t *)removed);
-        free(removed);
-    }
 }
 
 void execute_no_sync() {
@@ -93,16 +90,17 @@ void execute_no_sync() {
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    queue_val_t *queue = create_random_queue(10);
+    queue_val_t *queue = create_random_queue();
 
     // create threads
     for (i = 0; i < NUM_THREADS; i++) {
 
-        thread_args args;
-        args.id = i;
-        args.queue = queue;
+        thread_args *args = malloc(sizeof(args));
+        args->id = i;
+        args->queue = queue;
 
-        status = pthread_create(&thread[i], &attr, threadBody, (void *)&args);
+        fprintf(stderr, "criando thread %d\n", i);
+        status = pthread_create(&thread[i], &attr, threadBody, (void *)args);
         if (status) {
             fprintf(stderr, "pthread_create on thread %d", i);
             exit(1);
@@ -118,8 +116,6 @@ void execute_no_sync() {
         }
     }
 
-    destroy_queue(queue);
-    
     pthread_attr_destroy(&attr);
     pthread_exit(NULL);
 }

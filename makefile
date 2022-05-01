@@ -22,7 +22,7 @@ MAIN_DIR=test/src/
 endif
 
 # PATHs
-SOURCE_DIR=./main/src/
+SOURCE_DIR=./main/src
 INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
