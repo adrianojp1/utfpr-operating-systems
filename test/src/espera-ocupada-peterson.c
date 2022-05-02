@@ -21,6 +21,7 @@
 
 int turn = 0;
 int wants[2] = {0, 0};
+clock_t start, end;
 
 void enter(int task) {
     int other = 1 - task;
@@ -59,7 +60,11 @@ void *threadBody(void *t_args) {
     int thread_id = args->id;
     queue_val_t **queue = args->queue;
 
-    while (1) {
+    start = clock();
+    int appends_count = 0;
+
+    int t = 10000;
+    while (t--) {
         enter(thread_id);
         queue_val_t *old = *queue;
         queue_remove((queue_t **)queue, (queue_t *)old);
@@ -80,6 +85,12 @@ void *threadBody(void *t_args) {
         fprintf(stdout, "%s\n", out);
         free(old);
         leave(thread_id);
+
+        end = clock();
+        appends_count++;
+        double cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+        fprintf(stdout, "Inserções por segundo: %d per s\n",
+                (int)(appends_count / cpu_time_used));
     }
 
     pthread_exit(NULL);
