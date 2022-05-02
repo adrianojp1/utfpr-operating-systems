@@ -18,7 +18,7 @@ ifndef MAIN_FILE
 MAIN_FILE=espera-ocupada-peterson
 endif
 ifndef MAIN_DIR
-MAIN_DIR=test/src/
+MAIN_DIR=test/src
 endif
 
 # PATHs
