@@ -1,6 +1,6 @@
 /**
  **********************************************
- *         PPOS Core implementation          **
+ * Espera Ocupada Alternancy implementation  **
  *                                           **
  * Autores: Ricky Lemes Habegger &           **
  *          Adriano José Paulichi            **
@@ -19,6 +19,21 @@
 
 #define NUM_THREADS 2
 
+int turn = 0;
+int wants[2] = {0, 0};
+
+void enter(int task) {
+    int other = 1 - task;
+    wants[task] = 1;
+    turn = other;
+    while ((turn == other) && wants[other]) {
+    };
+}
+
+void leave(int task) {
+    wants[task] = 0;
+}
+
 typedef struct queue_val_t {
     struct queue_val_t *prev;
     struct queue_val_t *next;
@@ -27,7 +42,7 @@ typedef struct queue_val_t {
 
 typedef struct thread_args {
     int id;
-    queue_val_t *queue;
+    queue_val_t **queue;
 } thread_args;
 
 queue_val_t *create_random_elem() {
@@ -42,31 +57,29 @@ void *threadBody(void *t_args) {
 
     thread_args *args = t_args;
     int thread_id = args->id;
-    queue_val_t *queue = args->queue;
-    fprintf(stderr, "thread %d iniciada\n", thread_id);
+    queue_val_t **queue = args->queue;
 
     while (1) {
-        queue_val_t *old = queue;
-        queue_remove((queue_t **)&queue, (queue_t *)queue);
+        enter(thread_id);
+        queue_val_t *old = *queue;
+        queue_remove((queue_t **)queue, (queue_t *)old);
 
         queue_val_t *new = create_random_elem();
-        queue_append((queue_t **)&queue, (queue_t *)new);
+        queue_append((queue_t **)queue, (queue_t *)new);
 
         char out[100];
         sprintf(out, "thread %d: tira %2d,  põe: %2d,  fila: %2d", thread_id,
-                old->val, new->val, queue->val);
-
+                old->val, new->val, (*queue)->val);
         queue_val_t *it;
-        for (it = queue->next; it != queue; it = it->next) {
+        for (it = (*queue)->next; it != *queue; it = it->next) {
             char val[5];
             sprintf(val, " %2d", it->val);
             strcat(out, val);
         }
 
-        strcat(out, "\n");
-        fprintf(stderr, "%s", out);
-
+        fprintf(stdout, "%s\n", out);
         free(old);
+        leave(thread_id);
     }
 
     pthread_exit(NULL);
@@ -80,7 +93,7 @@ queue_val_t *create_random_queue() {
     return queue;
 }
 
-void execute_no_sync() {
+void execute_peterson() {
     pthread_t thread[NUM_THREADS];
     pthread_attr_t attr;
     int i, status;
@@ -95,11 +108,10 @@ void execute_no_sync() {
 
         thread_args *args = malloc(sizeof(thread_args));
         args->id = i;
-        args->queue = queue;
+        args->queue = &queue;
 
         status = pthread_create(&thread[i], &attr, threadBody, (void *)args);
         if (status) {
-            fprintf(stderr, "pthread_create on thread %d", i);
             exit(1);
         }
     }
@@ -108,7 +120,6 @@ void execute_no_sync() {
     for (i = 0; i < NUM_THREADS; i++) {
         status = pthread_join(thread[i], NULL);
         if (status) {
-            fprintf(stderr, "pthread_join on thread %d", i);
             exit(1);
         }
     }
@@ -119,5 +130,5 @@ void execute_no_sync() {
 
 int main() {
     srand(time(NULL));
-    execute_no_sync();
+    execute_peterson();
 }

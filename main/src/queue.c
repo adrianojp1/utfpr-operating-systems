@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 int queue_size(queue_t *queue) {
-    if (queue == NULL) return 0;
+    if (queue == NULL)
+        return 0;
     int size = 1;
 
     queue_t *first = queue, *it;
@@ -54,7 +55,7 @@ int queue_append(queue_t **queue, queue_t *elem) {
 }
 
 void remove_elem(queue_t *elem) {
-    if (elem->next != elem) {  // se a fila tem mais de 1 elemento
+    if (elem->next != elem) { // se a fila tem mais de 1 elemento
         elem->prev->next = elem->next;
         elem->next->prev = elem->prev;
     }
