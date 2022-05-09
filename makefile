@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=pingpong-join
+MAIN_FILE=produtor_consumidor
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src
