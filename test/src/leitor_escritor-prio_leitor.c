@@ -1,6 +1,6 @@
 /**
  **********************************************
- *        Produtor/Consumidor POSIX          **
+ *       Leitor/Escritor - Prio Leitor       **
  *                                           **
  * Autores: Ricky Lemes Habegger &           **
  *          Adriano José Paulichi            **
@@ -18,16 +18,22 @@
 
 // Internal libs
 #include <queue.h>
-#define NUM_THREADS 5
+#define NUM_READER 3
+#define NUM_WRITER 2
+#define NUM_THREADS (NUM_READER + NUM_WRITER)
 #define QUEUE_SIZE 10
 #define RANDOM_MAX 100
 #define DEFAULT_OUTPUT stderr
 
-int num_elem = 0;
+// Struct que permite a concorrência entre threads do mesmo tipo
+typedef struct lightswitch {
+    sem_t *can_enter;
+    int counter;
+    sem_t *counter_lock;
+} ls_t;
 
-sem_t s_buffer, s_item, s_vaga;
-sem_t s_leitores_ativos, s_escrita;
-int leitores_ativos = 0;
+sem_t s_escritor_lock;
+ls_t ls_leitores;
 
 typedef struct queue_val_t {
     struct queue_val_t *prev;
@@ -40,27 +46,45 @@ typedef struct thread_args {
     queue_val_t **queue;
 } thread_args;
 
+void enter(ls_t *ls) {
+    sem_wait(ls->counter_lock);
+    /* First thread waits to be able to enter */
+    if (++(ls->counter) == 1) {
+        sem_wait(ls->can_enter);
+    }
+    sem_post(ls->counter_lock);
+}
+
+void leave(ls_t *ls) {
+    sem_wait(ls->counter_lock);
+    /* Last thread waits to be able to enter */
+    if (--(ls->counter) == 0) {
+        sem_post(ls->can_enter);
+    }
+    sem_post(ls->counter_lock);
+}
+
 void print_queue_med(int thread_id, queue_val_t **queue) {
-    char out[100];
-    sprintf(out, "Leitor %d: [", thread_id);
     int sum = (*queue)->val, num = 1;
     queue_val_t *it;
 
-    char val[5];
-    sprintf(val, " %2d", (*queue)->val);
-    strcat(out, val);
+    char queue_out[100];
+    sprintf(queue_out, "%2d", (*queue)->val);
 
     for (it = (*queue)->next; it != *queue; it = it->next) {
         char val[5];
         sprintf(val, " %2d", it->val);
-        strcat(out, val);
+        strcat(queue_out, val);
         sum += it->val;
         num += 1;
+
+#ifdef DEBUG
+        fprintf(DEFAULT_OUTPUT, "Leitor %d somando %s\n", thread_id, val);
+        fflush(DEFAULT_OUTPUT);
+#endif
     }
-    char med[50];
-    sprintf(med, "] -> med = %2f", (double)sum / num);
-    strcat(out, med);
-    fprintf(DEFAULT_OUTPUT, "%s\n", out);
+
+    fprintf(DEFAULT_OUTPUT, "Leitor %d --> [ %s ] - med = %2f\n", thread_id, queue_out, (double)sum / num);
     fflush(DEFAULT_OUTPUT);
 }
 
@@ -85,27 +109,30 @@ queue_val_t *create_random_queue() {
     return queue;
 }
 
+void queue_write(int thread_id, queue_val_t **queue) {
+    queue_val_t *old = *queue;
+    queue_remove((queue_t **)queue, (queue_t *)old);
+
+    queue_val_t *new = create_random_elem(RANDOM_MAX);
+    queue_append((queue_t **)queue, (queue_t *)new);
+
+    fprintf(DEFAULT_OUTPUT, "Escritor %d --> removeu: %d, escreveu %d\n", thread_id, old->val, new->val);
+    fflush(DEFAULT_OUTPUT);
+
+    free(old);
+}
+
 void *escritor_body(void *t_args) {
     thread_args *args = t_args;
     int thread_id = args->id;
     queue_val_t **queue = args->queue;
 
     while (1) {
-        sem_wait(&s_escrita);
+        sem_wait(&s_escritor_lock);
 
-        queue_val_t *old = *queue;
-        queue_remove((queue_t **)queue, (queue_t *)old);
+        queue_write(thread_id, queue);
 
-        queue_val_t *new = create_random_elem(RANDOM_MAX);
-        queue_append((queue_t **)queue, (queue_t *)new);
-
-        char str[100];
-        sprintf(str, "e%d --> removeu: %d, escreveu %d\n", thread_id, old->val,
-                new->val);
-        fprintf(DEFAULT_OUTPUT, "%s", str);
-        fflush(DEFAULT_OUTPUT);
-        free(old);
-        sem_post(&s_escrita);
+        sem_post(&s_escritor_lock);
     }
 }
 
@@ -115,22 +142,21 @@ void *leitor_body(void *t_args) {
     queue_val_t **queue = args->queue;
 
     while (1) {
-        sem_wait(&s_leitores_ativos);
-        leitores_ativos++;
-        if (leitores_ativos == 1) {
-            sem_wait(&s_escrita);
-        }
-        sem_post(&s_leitores_ativos);
+        enter(&ls_leitores);
 
         print_queue_med(thread_id, queue);
 
-        sem_wait(&s_leitores_ativos);
-        leitores_ativos--;
-        if (leitores_ativos == 0) {
-            sem_post(&s_escrita);
-        }
-        sem_post(&s_leitores_ativos);
+        leave(&ls_leitores);
     }
+}
+
+void init_lightswitch(ls_t *ls, sem_t *sem) {
+    ls->can_enter = sem;
+    ls->counter_lock = malloc(sizeof(sem_t));
+    ls->counter = 0;
+
+    sem_init(ls->can_enter, 0, 1);
+    sem_init(ls->counter_lock, 0, 1);
 }
 
 void execute() {
@@ -138,15 +164,14 @@ void execute() {
     pthread_attr_t attr;
     int i, status;
 
-    sem_init(&s_leitores_ativos, 0, 1);
-    sem_init(&s_escrita, 0, 1);
+    init_lightswitch(&ls_leitores, &s_escritor_lock);
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     queue_val_t *queue = create_random_queue();
     // create threads
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < NUM_WRITER; i++) {
 
         thread_args *args = malloc(sizeof(thread_args));
         args->id = i;
@@ -158,7 +183,7 @@ void execute() {
         }
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NUM_READER; i++) {
 
         thread_args *args = malloc(sizeof(thread_args));
         args->id = i;

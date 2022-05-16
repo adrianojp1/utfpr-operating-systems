@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=leitor_escritor_1
+MAIN_FILE=leitor_escritor-prio_escritor
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src
