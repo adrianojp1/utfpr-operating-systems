@@ -48,7 +48,6 @@ void *produtor_body(void *t_args) {
     queue_val_t **buffer = args->queue;
 
     while (1) {
-        // sleep(rand() % 4);
         sem_wait(&s_vaga);
         sem_wait(&s_buffer);
         int item = rand() % 1000;
@@ -79,7 +78,6 @@ void *consumidor_body(void *t_args) {
         printf("Numero de elementos: %d\n", num_elem);
         sem_post(&s_buffer);
         sem_post(&s_vaga);
-        // sleep(rand() % 4);
     }
 }
 
