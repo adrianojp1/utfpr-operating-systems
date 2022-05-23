@@ -3,6 +3,7 @@ pong
 videos/
 *.mkv
 /*.txt
+temp/*
 
 .vscode/
 .idea/
