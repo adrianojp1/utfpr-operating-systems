@@ -15,7 +15,7 @@ ifndef NOME_PROJ
 NOME_PROJ=pong
 endif
 ifndef MAIN_FILE
-MAIN_FILE=leitor_escritor-prio_igual
+MAIN_FILE=simulador-substituicao
 endif
 ifndef MAIN_DIR
 MAIN_DIR=test/src
@@ -52,6 +52,7 @@ FLAGS=-lpthread
 CC_FLAGS=-c                     \
          -Wall                  \
 		 -D_POSIX_C_SOURCE      \
+		 -g
 		 # -Wextra                \
          # -pedantic              \
          #-pedantic-errors       \
@@ -129,7 +130,10 @@ uninstall:
 
 # Gerar o executavel e executar
 run: all
-	@ ./$(NOME_PROJ) 
+	@ ./$(NOME_PROJ) 3 < paginas/vsim-livro.txt
+	@ #./$(NOME_PROJ) 4 < paginas/vsim-exemplo.txt
+	@ #./$(NOME_PROJ) 4 < paginas/vsim-belady.txt
+	@ #./$(NOME_PROJ) 64 < paginas/vsim-gcc.txt
 
 test: all
 	@ ./$(NOME_PROJ) > test_result.txt
