@@ -8,13 +8,68 @@
  **********************************************
  */
 
-#include <fila.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #define MAX_PAGES 1e6
+
+typedef struct {
+    int inicio;
+    int fim;
+    int tam;
+    int *vetor;
+} Fila;
+
+Fila *cria_fila(int tam);
+void desaloca_fila(Fila *f);
+void inserir_fila(Fila *f, int e);
+int retirar_fila(Fila *f);
+int cheia_fila(Fila *f);
+int vazia_fila(Fila *f);
+
+Fila *cria_fila(int tam) {
+    Fila *f = (Fila *)malloc(sizeof(Fila));
+    f->inicio = 0;
+    f->fim = 0;
+    f->tam = tam;
+    f->vetor = (int *)malloc(sizeof(int) * tam);
+    return (f);
+}
+
+void desaloca_fila(Fila *f) {
+    free(f->vetor);
+    free(f);
+}
+
+void inserir_fila(Fila *f, int elem) {
+    if (cheia_fila(f)) {
+        printf("ERRO: Fila Cheia");
+        exit(1);
+    }
+    f->vetor[f->fim] = elem;
+    f->fim = (f->fim + 1) % f->tam;
+}
+
+int retirar_fila(Fila *f) {
+    int elem;
+    if (vazia_fila(f)) {
+        printf("ERRO: Fila Vazia");
+        exit(1);
+    }
+    elem = f->vetor[f->inicio];
+    f->inicio = (f->inicio + 1) % f->tam;
+    return (elem);
+}
+
+int cheia_fila(Fila *f) {
+    return (((f->fim + 1) % f->tam) == f->inicio);
+}
+
+int vazia_fila(Fila *f) {
+    return (f->inicio == f->fim);
+}
 
 int readPages(int *pages) {
     int n = 0;
@@ -211,10 +266,10 @@ int main(int argc, char **argv) {
     int *pages = (int *)malloc(sizeof(int) * MAX_PAGES);
     int n = readPages(pages);
 
-    for (int i = 0; i < n; i++) {
-        printf("%d, ", pages[i]);
-    }
-    printf("\n");
+    // for (int i = 0; i < n; i++) {
+    //     printf("%d, ", pages[i]);
+    // }
+    // printf("\n");
 
     int fifo = simulateFIFO(pages, n, ram_size);
     int rlu = simulateRLU(pages, n, ram_size);

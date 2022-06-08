@@ -26,8 +26,8 @@ SOURCE_DIR=./main/src
 INCLUDE_DIR=./main/include
 LIB_DIR=
 OBJ_DIR=./objetos
-FILTER_OUT_SRC=
-FILTER_OUT_INCLUDE=
+FILTER_OUT_SRC=./main/src/fila.c
+FILTER_OUT_INCLUDE=./main/include/fila.h
 
 # Compilador
 CC=gcc
